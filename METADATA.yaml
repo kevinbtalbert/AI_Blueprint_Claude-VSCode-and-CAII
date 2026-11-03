@@ -1,0 +1,52 @@
+# Cloudera Blueprint catalog metadata
+# Populate fields used by the master blueprint website and internal catalog.
+
+# --- Identity ---
+name: "VS Code + Claude Code with Cloudera AI Inference"
+slug: "vscode-claude-code-cai-inference"
+description: "Browser VS Code (code-server) with Claude Code CLI and extension in Cloudera AI Workbench against Devstral and other models on Cloudera AI Inference via LiteLLM."
+reprise_link: ""
+
+# --- Classification (website filters) ---
+catalog_classification:
+  - Developer Example
+launchable: true
+lifecycle_status: Active
+
+# --- Industry & alignment ---
+industry: General
+industry_alignment: "Horizontal"
+target_vertical: ""
+
+# --- Tags (website search & browse) ---
+tags:
+  - vscode
+  - code-server
+  - claude-code
+  - devstral
+  - cai-inference
+  - coding-agent
+  - agents
+  - litellm
+
+# --- Relationships ---
+product_mapping:
+  - Cloudera AI Inference Service
+  - Cloudera Machine Learning
+model_dependencies:
+  - kevinbtalbert/Devstral-Small-2507
+
+# --- Provenance ---
+publisher: cloudera
+source: Internal
+
+# --- Repository & assets ---
+public_github_link: "https://github.com/kevinbtalbert/AI_Blueprint_Claude-VSCode-and-CAII"
+
+# --- Ownership ---
+maintainer_name: "Kevin Talbert"
+
+# --- Dates ---
+date_created: "2026-08-17"
+date_updated: "2026-08-17"
+published_date: "2026-08-17"
