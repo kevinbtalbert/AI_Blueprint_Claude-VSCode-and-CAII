@@ -283,6 +283,7 @@ Sizing is for the **CAII model** (not the workbench runtime).
 | `401 Unauthorized` | New JWT in `CAII_API_TOKEN` |
 | Model error / 404 on `/responses` in `litellm.log` | vLLM endpoints need chat completions. Ensure `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES=true` (default in this runtime), then `claude-stop-proxy` and `claude-sync-config` |
 | Chat works, tools don't | Devstral + vLLM tool flags on the endpoint (`--enable-auto-tool-choice --tool-call-parser mistral`) |
+| LiteLLM log: `Set models: None` / `TypeError: expected str instance, NoneType found` | VS Code editor startup can inherit `CAI_CLAUDE_ALIASES_LOADED=1` without the alias variables. **Workaround:** `unset CAI_CLAUDE_ALIASES_LOADED; claude-sync-config` then `claude`. Rebuild the runtime image with the latest `scripts/lib/cai-common.sh` fix. |
 | Proxy won't start | `claude-logs` or `tail ~/.claude/cai-inference/litellm.log`. The runtime image pins LiteLLM/FastAPI in `requirements-litellm.txt` and verifies the proxy at **Docker build** time — rebuild and re-register the runtime if you are on an older image. |
 | `ContextWindowExceededError` / `requested 64000 output tokens` in `litellm.log` | Claude Code Opus 4.6 requests up to 64k output tokens; Devstral is capped at **65536** total context (`--max-model-len 65536`). The runtime defaults to **`CAII_MAX_OUTPUT_TOKENS=8192`** and **`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`**. Run `claude-stop-proxy`, `claude-sync-config`, then `claude` again. Increase only if your endpoint uses a larger `--max-model-len`. |
 

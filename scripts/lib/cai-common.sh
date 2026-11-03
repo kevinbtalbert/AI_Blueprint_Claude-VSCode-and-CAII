@@ -34,17 +34,40 @@ cai_die() { cai_log "ERROR: $*"; return 1; }
 
 cai_have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
-cai_load_claude_model_aliases() {
-    if [[ -n "${CAI_CLAUDE_ALIASES_LOADED:-}" ]]; then
+# Real npm CLI path (the interactive `claude()` shell function must not be used here).
+cai_claude_cli_bin() {
+    local bin=""
+    if [[ -f /opt/cai-claude/claude-cli-bin ]]; then
+        bin="$(tr -d '[:space:]' </opt/cai-claude/claude-cli-bin)"
+        if [[ -n "$bin" && -x "$bin" ]]; then
+            printf '%s' "$bin"
+            return 0
+        fi
+    fi
+    bin="$(type -P claude 2>/dev/null || true)"
+    if [[ -n "$bin" && -x "$bin" ]]; then
+        printf '%s' "$bin"
         return 0
     fi
+    return 1
+}
+
+cai_load_claude_model_aliases() {
+    # VS Code starts configure-claude-from-env in the editor process and may export
+    # CAI_CLAUDE_ALIASES_LOADED without the alias variables. Terminals inherit the flag
+    # but re-source resets CLAUDE_* — reload from disk when aliases are missing.
+    if [[ -n "${CAI_CLAUDE_ALIASES_LOADED:-}" \
+        && -n "$CLAUDE_SONNET_ALIAS" && -n "$CLAUDE_OPUS_ALIAS" && -n "$CLAUDE_HAIKU_ALIAS" ]]; then
+        return 0
+    fi
+    unset CAI_CLAUDE_ALIASES_LOADED
 
     if [[ -f "$CLAUDE_MODEL_ALIASES_FILE" ]]; then
         # shellcheck disable=SC1090
         source "$CLAUDE_MODEL_ALIASES_FILE"
-    elif cai_have_cmd claude && [[ -f /opt/cai-claude/lib/resolve-claude-model-aliases.py ]]; then
+    elif claude_bin="$(cai_claude_cli_bin)" && [[ -f /opt/cai-claude/lib/resolve-claude-model-aliases.py ]]; then
         # shellcheck disable=SC1090
-        eval "$(python3 /opt/cai-claude/lib/resolve-claude-model-aliases.py "$(command -v claude)" --shell 2>/dev/null)" || true
+        eval "$(python3 /opt/cai-claude/lib/resolve-claude-model-aliases.py "$claude_bin" --shell 2>/dev/null)" || true
     fi
 
     CLAUDE_OPUS_ALIAS="${CAI_CLAUDE_OPUS_ALIAS:-${CLAUDE_OPUS_ALIAS:-}}"
@@ -55,7 +78,7 @@ cai_load_claude_model_aliases() {
     if [[ -z "$CLAUDE_SONNET_ALIAS" || -z "$CLAUDE_OPUS_ALIAS" || -z "$CLAUDE_HAIKU_ALIAS" ]]; then
         cai_die "Could not resolve Claude Code model aliases from the installed CLI. Rebuild the runtime image or set CAI_CLAUDE_*_ALIAS." || return 1
     fi
-    export CAI_CLAUDE_ALIASES_LOADED=1
+    CAI_CLAUDE_ALIASES_LOADED=1
 }
 
 cai_ensure_caii_token() {
@@ -120,6 +143,9 @@ cai_litellm_bin() {
 
 cai_write_litellm_config() {
     cai_load_claude_model_aliases || return 1
+    if [[ -z "$CLAUDE_SONNET_ALIAS" || -z "$CLAUDE_OPUS_ALIAS" || -z "$CLAUDE_HAIKU_ALIAS" ]]; then
+        cai_die "LiteLLM config refused: Claude model aliases are empty (stale CAI_CLAUDE_ALIASES_LOADED?). Run: unset CAI_CLAUDE_ALIASES_LOADED; claude-sync-config" || return 1
+    fi
     local base_url model openai_model max_out max_in
     base_url="${CAII_OPENAI_BASE_URL%/}"
     model="${CAII_MODEL}"

@@ -40,10 +40,10 @@ claude() {
 claude-status() {
     echo ""
     echo "┌─ Claude Code + Cloudera AI Inference ───────────────────────────────────┐"
-    if cai_have_cmd claude; then
-        echo "│  ✓ claude: $(command -v claude) ($(claude --version 2>/dev/null | head -1 || echo ''))"
+    if claude_bin="$(cai_claude_cli_bin 2>/dev/null)"; then
+        echo "│  ✓ claude CLI: ${claude_bin} ($(command claude --version 2>/dev/null | head -1 || echo ''))"
     else
-        echo "│  ✗ claude CLI not found"
+        echo "│  ✗ claude CLI not found (npm @anthropic-ai/claude-code)"
     fi
     if cai_caii_env_ready; then
         echo "│  ✓ CAII env set (model: ${CAII_MODEL})"

@@ -45,8 +45,10 @@ RUN bash -euo pipefail -c '\
     fi; \
     npm install -g "@anthropic-ai/claude-code@${CLAUDE_CLI_VERSION}"; \
     command -v claude >/dev/null; \
+    command -v claude > /opt/cai-claude/claude-cli-bin; \
     claude --version 2>/dev/null | grep -oE "[0-9]+(\.[0-9]+)*" | head -1 > /opt/cai-claude/claude-cli-version; \
-    python3 /opt/cai-claude/lib/resolve-claude-model-aliases.py "$(command -v claude)" > /opt/cai-claude/claude-model-aliases.env \
+    python3 /opt/cai-claude/lib/resolve-claude-model-aliases.py "$(cat /opt/cai-claude/claude-cli-bin)" > /opt/cai-claude/claude-model-aliases.env; \
+    grep -E "^CLAUDE_(OPUS|SONNET|HAIKU)_ALIAS=." /opt/cai-claude/claude-model-aliases.env >/dev/null \
     '
 
 # ── LiteLLM proxy (Anthropic API → OpenAI-compatible CAI Inference) ──────────
